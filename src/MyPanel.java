@@ -3,15 +3,16 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 import java.util.Vector;
 
 public class MyPanel extends JPanel implements ActionListener {
 
     private int nodeNr = 1;
-    private final int node_diam = 30;
+    public static int node_diam = 30;
     private Vector<Node> listaNoduri;
     private Vector<Arc> listaArce;
-    JButton schimbareModGraf, editButton, clearButton;
+    JButton schimbareModGraf, editButton, clearButton, drawNodes, changeDiam;
     JLabel nodSelectat;
     Point pointStart = null;
     Point pointEnd = null;
@@ -21,6 +22,7 @@ public class MyPanel extends JPanel implements ActionListener {
     boolean isDragging = false;
     boolean editMode = false;
     static boolean grafOrientat = false;
+
 
     public MyPanel() {
 
@@ -39,16 +41,23 @@ public class MyPanel extends JPanel implements ActionListener {
         clearButton = new JButton("Clear");
         clearButton.addActionListener(this);
 
+        drawNodes = new JButton("Draw Nodes");
+        drawNodes.addActionListener(this);
+
+        changeDiam = new JButton("Change Diameter ("+node_diam+")");
+        changeDiam.addActionListener(this);
+
         add(clearButton);
         add(nodSelectat);
         add(editButton);
         add(schimbareModGraf);
+        add(drawNodes);
+        add(changeDiam);
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
         setBackground(Color.BLACK);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-
                 if (!checkNode(e.getX(), e.getY(), 1) && !editMode)
                     pointStart = e.getPoint();
 
@@ -65,7 +74,7 @@ public class MyPanel extends JPanel implements ActionListener {
                     }
                 }
                 if (!isDragging) {
-                    if (checkNode(e.getX(), e.getY(), node_diam)) {
+                     if (checkNode(e.getX(), e.getY(), node_diam)) {
                         addNode(e.getX(), e.getY());
                         saveMatrixToFile();
                     }
@@ -103,42 +112,6 @@ public class MyPanel extends JPanel implements ActionListener {
         listaNoduri.add(node);
         nodeNr++;
         repaint();
-    }
-
-    public boolean checkNode(int x, int y, int diam) {
-
-        Rectangle rect1 = new Rectangle(x,y, diam,diam);
-        return searchNodes(x,y, rect1);
-
-    }
-
-    public boolean searchNodes(int x, int y, Rectangle r) {
-
-        Rectangle rectangle = new Rectangle(x, y, node_diam, node_diam);
-
-        if (listaNoduri.size() == 0)
-            return true;
-
-        for (int i = 0; i<listaNoduri.size(); i++) {
-            rectangle.setBounds(listaNoduri.elementAt(i).getCoordX(), listaNoduri.elementAt(i).getCoordY(), 30, 30);
-            if (!verifyIntersection(rectangle, r)) {
-                helpNode = listaNoduri.elementAt(i);
-                nodSelectat.setText("Nod selectat: " + helpNode.getNumber());
-                if (nodeStart == null)
-                    nodeStart = listaNoduri.elementAt(i);
-                else nodeEnd = listaNoduri.elementAt(i);
-                return false;
-            }
-        }
-        r = null;
-        return true;
-
-    }
-    public boolean verifyIntersection(Rectangle r, Rectangle r1) {
-
-        Rectangle intersection = r.intersection(r1);
-        return intersection.isEmpty();
-
     }
 
     private void saveMatrixToFile() {
@@ -184,8 +157,65 @@ public class MyPanel extends JPanel implements ActionListener {
     public void updateArcs() {
 
         for (int i = 0; i<listaArce.size(); i++)
-            listaArce.elementAt(i).editArc(new Point(listaArce.elementAt(i).getNodeStart().getCoordX()+15, listaArce.elementAt(i).getNodeStart().getCoordY()+15), new Point(listaArce.elementAt(i).getNodeEnd().getCoordX()+15, listaArce.elementAt(i).getNodeEnd().getCoordY()+15));
+            listaArce.elementAt(i).editArc(new Point(listaArce.elementAt(i).getNodeStart().getCoordX()+node_diam/2,
+                    listaArce.elementAt(i).getNodeStart().getCoordY()+node_diam/2),
+                    new Point(listaArce.elementAt(i).getNodeEnd().getCoordX()+node_diam/2,
+                            listaArce.elementAt(i).getNodeEnd().getCoordY()+node_diam/2));
 
+    }
+
+    void drawNodesByNumber(int number) {
+        clearGraph();
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        Random random = new Random();
+        while(nodeNr <= number) {
+            int x = 15+random.nextInt((int)size.getWidth()-35);
+            int y = 30+random.nextInt((int)size.getHeight()-110);
+            if (checkNode(x, y, node_diam))
+                addNode(x, y);
+            repaint();
+        }
+        double probability = Double.parseDouble(JOptionPane.showInputDialog("Probability for arcs"));
+        drawArcsByProbability(probability);
+        //saveMatrixToFile();
+    }
+
+    void drawArcsByProbability(double prob) {
+        double num;
+        for (int i = 0; i < listaNoduri.size(); i++) {
+            for (int j = 0; j < listaNoduri.size(); j++) {
+                num = Math.random();
+                if (num < prob && i != j) {
+                    Arc arc = new Arc(new Point(listaNoduri.elementAt(i).getCoordX()+node_diam/2, listaNoduri.elementAt(i).getCoordY()+node_diam/2)
+                            , new Point(listaNoduri.elementAt(j).getCoordX()+node_diam/2, listaNoduri.elementAt(j).getCoordY()+node_diam/2)
+                            , listaNoduri.elementAt(i), listaNoduri.elementAt(j));
+                    listaArce.add(arc);
+                }
+            }
+        }
+        repaint();
+
+    }
+    public boolean checkNode(int x, int y, int diam) {
+        if (listaNoduri.isEmpty())
+            return true;
+        Rectangle r1 = null;
+        Rectangle r2 = null;
+        Rectangle intersection = null;
+        for (int i = 0; i<listaNoduri.size(); i++) {
+            r1 = new Rectangle(listaNoduri.elementAt(i).getCoordX(), listaNoduri.elementAt(i).getCoordY(), node_diam, node_diam);
+            r2 = new Rectangle(x, y, diam, diam);
+            intersection = r1.intersection(r2);
+            if (!intersection.isEmpty()) {
+                helpNode = listaNoduri.elementAt(i);
+                nodSelectat.setText("Nod selectat: " + helpNode.getNumber());
+                if (nodeStart == null)
+                    nodeStart = listaNoduri.elementAt(i);
+                else nodeEnd = listaNoduri.elementAt(i);
+                return false;
+            }
+        }
+        return true;
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -215,6 +245,15 @@ public class MyPanel extends JPanel implements ActionListener {
         if (e.getSource() == clearButton)
             clearGraph();
 
+        if (e.getSource() == drawNodes) {
+            int numberOfDrawnNodes = Integer.parseInt(JOptionPane.showInputDialog("Number of nodes to draw"));
+            drawNodesByNumber(numberOfDrawnNodes);
+        }
+        if (e.getSource() == changeDiam) {
+            node_diam = Integer.parseInt(JOptionPane.showInputDialog("WARNING!\nNode counting is unavailable for a diameter less than 20\nChanging will clear the graph!"));
+            changeDiam.setText("Change Diameter ("+node_diam+")");
+            clearGraph();
+        }
     }
 
     protected void paintComponent(Graphics g) {

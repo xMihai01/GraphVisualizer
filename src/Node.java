@@ -38,9 +38,11 @@ public class Node {
         g.setColor(Color.BLACK);
         g.drawOval(coordX, coordY, node_diam, node_diam);
         g.setColor(Color.WHITE);
-        if (number < 10)
-            g.drawString(((Integer)number).toString(), coordX+13, coordY+20);
-        else g.drawString(((Integer)number).toString(), coordX+8, coordY+20);
+        if (node_diam >= 20) {
+            if (number < 10)
+                g.drawString(((Integer) number).toString(), coordX + node_diam/2, coordY + node_diam/2);
+            else g.drawString(((Integer) number).toString(), coordX + node_diam/3, coordY + node_diam/2);
+        }
     }
 
 }

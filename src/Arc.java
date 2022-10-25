@@ -39,7 +39,7 @@ public class Arc {
             g.setColor(Color.RED);
             g.drawLine(start.x, start.y, end.x, end.y);
             if (MyPanel.isGrafOrientat())
-                drawArrow(g, start.x, start.y, end.x, end.y, 30, 30);
+                drawArrow(g, start.x, start.y, end.x, end.y, MyPanel.node_diam, MyPanel.node_diam);
         }
 
 
@@ -55,5 +55,7 @@ public class Arc {
                 y1 + (int) (headLength * Math.sin(angle - offs))};
         g.drawLine(x0, y0, x1, y1);
         g.drawPolyline(xs, ys, 3);
+        g.setColor(Color.GREEN);
+        g.fillPolygon(xs, ys, 3);
     }
 }
