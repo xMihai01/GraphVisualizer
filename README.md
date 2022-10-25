@@ -4,5 +4,7 @@
 - Drag to add an Arc between 2 nodes
 - Click "Edit" to move nodes
 - Click "Graf orientat" to change Graph mode
+- Click "ChangeDiameter" to change diameter
+- Click "DrawNodes" to generate random nodes
 
-![graph](https://user-images.githubusercontent.com/107000972/197358668-d3fa4cc2-fe69-4071-90ba-61d9b5c7f9e1.png)
+<img width="956" alt="graphvis" src="https://user-images.githubusercontent.com/107000972/197850652-aa954cf6-2d44-4a97-b664-1997fb2802e1.png">
